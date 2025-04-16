@@ -7,7 +7,7 @@
 using namespace sf;
 using namespace std;
 
-class Game : public sf::Drawable{
+class Game : public sf::Drawable{   // herança de SFML::Drawable semelhante ao canvas
     public:
         static const int WIDTH = 640, HEIGHT = 480;
         static int contador;
@@ -19,8 +19,8 @@ class Game : public sf::Drawable{
         Spawner spawner;
         RenderWindow window;
 
-        Game() : window(VideoMode(WIDTH, HEIGHT), "Meu jogo"){
-            window.setFramerateLimit(60);
+        Game() : window(VideoMode(WIDTH, HEIGHT), "Meu jogo"){ // COnstrutor da janela
+            window.setFramerateLimit(60);                      // configuração de frames
         }
         void update(){
             spawner.update();
@@ -33,10 +33,65 @@ class Game : public sf::Drawable{
         }
         void render(){
             window.clear(Color::Black);
-            if(gameOver){
+            if(!gameOver){
+
+                // Criação de retangulo
                 RectangleShape barra(Vector2f(contador * 3, 20));
                 barra.setPosition(WIDTH / 2 - 100 - 70, 20);
                 barra.setFillColor(Color::Green);
+                window.draw(barra);
+
+                RectangleShape contorno(Vector2f(300, 20));
+                contorno.setPosition(WIDTH / 2 - 100 - 70, 20);
+                contorno.setFillColor(Color::Transparent);
+                contorno.setOutlineColor(Color::White);
+                contorno.setOutlineThickness(1);
+                window.draw(contorno);
+
+                spawner.render(window);
+            } else {
+                Font font;
+                if(!font.loadFromFile("Arial.ttf")){ cout << "Erro ao carregar a fonte" << endl; }
+
+                // Configuraçao da frase "Game Over"
+                Text gameOverText("Game Over", font, 30);
+                gameOverText.setPosition(WIDTH / 2, HEIGHT / 2 - 200);
+                gameOverText.setFillColor(Color::Red);
+                window.draw(gameOverText);
+
+                Text score("Seu score: " + to_string(pontuacao), font, 30);
+                score.setPosition(WIDTH / 2 - 120, HEIGHT / 2 - 150);
+                score.setFillColor(Color::Green);
+                window.draw(score);
+
+                Text tryAgain(">> Press Enter to play again <<", font, 30);
+                tryAgain.setPosition(WIDTH / 2 - 270, HEIGHT / 2 + 80);
+                tryAgain.setFillColor(Color::White);
+                window.draw(tryAgain);
+            }
+            window.display();
+        }
+
+        void run(){
+            while (window.isOpen())
+            {
+                Event event;
+                while (window.pollEvent(event))
+                {
+                    if(event.type == Event::Closed){ window.close(); }
+                    if(event.type == Event::MouseButtonPressed && event.mouseButton.button == Mouse::Left){
+                        clicado == true;
+                        mx = event.mouseButton.x;
+                        my = event.mouseButton.y;
+                    }
+                    if(event.type == Event::KeyPressed && event.key.code == Keyboard::Enter && gameOver){
+                        pontuacao = 0;
+                        contador = 100;
+                        gameOver = false;
+                    }
+                }
+                update(); render();
+                this_thread::sleep_for(chrono::milliseconds(1000/60));   // limnitador de frames (60FPS)
             }
         }
 };
@@ -49,24 +104,7 @@ bool Game::clicado = false;
 bool Game::gameOver = false;
 
 int main() {
-    RenderWindow window(VideoMode({800, 600}), "Canvas com SFML 3");
-
-    CircleShape shape(100.f);
-    shape.setFillColor(Color::Green);
-
-    while (window.isOpen()) {
-        auto event = window.pollEvent();
-
-        if (event.has_value()) {
-            if (event->getIf<Event::Closed>()) {
-                window.close();
-            }
-        }
-
-        window.clear();
-        window.draw(shape);
-        window.display();
-    }
-
+    Game game;
+    game.run();
     return 0;
 }
