@@ -13,7 +13,7 @@ public class RectObj extends Rectangle{
         speed = new Random().nextInt((6-2)+2);
     }
     public void update(){
-        x = 2 + speed;
+        x += 2 + speed;
         rotation++;
         if(rotation >= 360){
             rotation = 0;
